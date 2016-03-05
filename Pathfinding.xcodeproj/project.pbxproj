@@ -9,10 +9,7 @@
 /* Begin PBXBuildFile section */
 		55F201CA1C8B9447006B6ACE /* ResourcePath.mm in Sources */ = {isa = PBXBuildFile; fileRef = 55F201C91C8B9447006B6ACE /* ResourcePath.mm */; };
 		55F201CD1C8B9447006B6ACE /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55F201CC1C8B9447006B6ACE /* main.cpp */; };
-		55F201D01C8B9447006B6ACE /* cute_image.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 55F201CF1C8B9447006B6ACE /* cute_image.jpg */; };
-		55F201D21C8B9447006B6ACE /* nice_music.ogg in Resources */ = {isa = PBXBuildFile; fileRef = 55F201D11C8B9447006B6ACE /* nice_music.ogg */; };
-		55F201D41C8B9447006B6ACE /* sansation.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 55F201D31C8B9447006B6ACE /* sansation.ttf */; };
-		55F201D61C8B9447006B6ACE /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 55F201D51C8B9447006B6ACE /* icon.png */; };
+		55F201DD1C8BA0DF006B6ACE /* inconsolata.otf in Resources */ = {isa = PBXBuildFile; fileRef = 55F201DC1C8BA0DF006B6ACE /* inconsolata.otf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,10 +18,7 @@
 		55F201C91C8B9447006B6ACE /* ResourcePath.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ResourcePath.mm; sourceTree = "<group>"; };
 		55F201CB1C8B9447006B6ACE /* ResourcePath.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ResourcePath.hpp; sourceTree = "<group>"; };
 		55F201CC1C8B9447006B6ACE /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		55F201CF1C8B9447006B6ACE /* cute_image.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cute_image.jpg; sourceTree = "<group>"; };
-		55F201D11C8B9447006B6ACE /* nice_music.ogg */ = {isa = PBXFileReference; lastKnownFileType = file; path = nice_music.ogg; sourceTree = "<group>"; };
-		55F201D31C8B9447006B6ACE /* sansation.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = sansation.ttf; sourceTree = "<group>"; };
-		55F201D51C8B9447006B6ACE /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
+		55F201DC1C8BA0DF006B6ACE /* inconsolata.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = inconsolata.otf; path = ../../Xadribol/Xadribol/resources/inconsolata.otf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,10 +71,7 @@
 		55F201CE1C8B9447006B6ACE /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				55F201CF1C8B9447006B6ACE /* cute_image.jpg */,
-				55F201D11C8B9447006B6ACE /* nice_music.ogg */,
-				55F201D31C8B9447006B6ACE /* sansation.ttf */,
-				55F201D51C8B9447006B6ACE /* icon.png */,
+				55F201DC1C8BA0DF006B6ACE /* inconsolata.otf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -142,10 +133,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				55F201D61C8B9447006B6ACE /* icon.png in Resources */,
-				55F201D41C8B9447006B6ACE /* sansation.ttf in Resources */,
-				55F201D21C8B9447006B6ACE /* nice_music.ogg in Resources */,
-				55F201D01C8B9447006B6ACE /* cute_image.jpg in Resources */,
+				55F201DD1C8BA0DF006B6ACE /* inconsolata.otf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
