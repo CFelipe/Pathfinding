@@ -5,10 +5,16 @@
 #include <list>
 #include <string>
 #include <iostream>
+#include <cmath>
 
 const sf::Color dark = sf::Color(51, 51, 51, 255);
 const sf::Color borderColor = sf::Color(102, 102, 102, 255);
 const sf::Color gridBg = sf::Color(242, 242, 242, 255);
+const sf::Color wallColor = sf::Color(165, 165, 165, 255);
+const sf::Color startGreen = sf::Color(89, 198, 95, 255);
+const sf::Color goalRed = sf::Color(196, 91, 91, 255);
+
+enum class Action { None, DraggingHandle, Painting, Erasing, DraggingRef };
 
 class RadioOption : public sf::Transformable, public sf::Drawable {
 public:
@@ -139,29 +145,121 @@ private:
     }
 };
 
-class Node : public sf::Transformable, public sf::Drawable {
+class Node : public sf::Drawable {
 public:
-    Node(unsigned int width, unsigned int height) {
+    Node(unsigned int width, unsigned int height, sf::Transformable* parent)
+    : wall(false),
+      parent(parent)
+    {
         rect = sf::RectangleShape(sf::Vector2f(width, height));
         rect.setFillColor(gridBg);
     }
     
-private:
+    bool getWall() {
+        return wall;
+    }
+    
+    void setWall(bool wall) {
+        this->wall = wall;
+        
+        if(wall) {
+            rect.setFillColor(wallColor);
+        } else {
+            rect.setFillColor(gridBg);
+        }
+    }
+    
+    sf::Vector2f center() {
+        return parent->getPosition() + sf::Vector2f(rect.getPosition().x + rect.getLocalBounds().width / 2,
+                                                    rect.getPosition().y + rect.getLocalBounds().height / 2);
+    }
+    
+    bool contains(sf::Vector2i point) {
+        return rect.getGlobalBounds().contains(sf::Vector2f(point.x, point.y) - parent->getPosition());
+    }
+    
+    void link(Node* node) {
+        neighbours.push_back(node);
+        node->neighbours.push_back(this);
+    }
+    
     sf::RectangleShape rect;
+    std::list<Node*> neighbours;
+    
+private:
+    sf::Transformable* parent;
+    bool wall;
     
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
-        states.transform *= getTransform();
         target.draw(rect, states);
     }
 };
+
+class NodeRef : public sf::Drawable {
+public:
+    NodeRef() {
+        node = nullptr;
+    }
+    
+    NodeRef(Node* node, sf::Color color, sf::Transformable* parent)
+    : node(node),
+      parent(parent),
+      dragging(false),
+      heuristic(0)
+    {
+        rect = sf::RectangleShape(sf::Vector2f(node->rect.getLocalBounds().width,
+                                               node->rect.getLocalBounds().height));
+        rect.setPosition(node->rect.getPosition());
+        rect.setFillColor(color);
+    }
+    
+    bool contains(sf::Vector2i point) {
+        return rect.getGlobalBounds().contains(sf::Vector2f(point.x, point.y) - parent->getPosition());
+    }
+    
+    void moveToMousePosition(sf::Vector2f mousePos) {
+        if(!dragging) {
+            dragging = true;
+            dragOffset = rect.getPosition() - (mousePos - parent->getPosition());
+        }
+        
+        rect.setPosition(dragOffset + (mousePos - parent->getPosition()));
+    }
+    
+    void moveToNode() {
+        rect.setPosition(node->rect.getPosition());
+        dragging = false;
+    }
+    
+    void setNode(Node* node) {
+        this->node = node;
+        rect.setPosition(node->rect.getPosition());
+        dragging = false;
+    }
+    
+    Node* node;
+    sf::RectangleShape rect;
+    //sf::Text heuristic;
+    unsigned int heuristic;
+    
+private:
+    sf::Transformable* parent;
+    bool dragging;
+    sf::Vector2f dragOffset;
+    
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
+        target.draw(rect, states);
+    }
+};
+
 
 class Grid : public sf::Transformable, public sf::Drawable {
 public:
     Grid(unsigned int rows, unsigned int columns, unsigned int width, unsigned int height)
     : rows(rows),
-      columns(columns),
-      width(width),
-      height(height)
+    columns(columns),
+    width(width),
+    height(height)
     {
         borderRect = sf::RectangleShape(sf::Vector2f(width + 1, height + 1));
         borderRect.setFillColor(borderColor);
@@ -169,33 +267,84 @@ public:
         unsigned int nodeW = (width / columns) - 1;
         unsigned int nodeH = (height / rows) - 1;
         
-        for(int i = 0; i < columns; ++i) {
-            for(int j = 0; j < rows; ++j) {
-                Node node(nodeW, nodeH);
-                node.setPosition(1 + ((nodeW + 1) * i), 1 + ((nodeH + 1) * j));
-                nodes.push_back(node);
+        for(int j = 0; j < rows; ++j) {
+            for(int i = 0; i < columns; ++i) {
+                Node* node = new Node(nodeW, nodeH, this);
+                node->rect.setPosition(1 + ((nodeW + 1) * i), 1 + ((nodeH + 1) * j));
+                nodes[i][j] = node;
+                
+                if(i >= 1) {
+                    node->link(nodes[i - 1][j]);
+                }
+                
+                if(j >= 1) {
+                    node->link(nodes[i][j - 1]);
+                }
+                
+                if(i >= 1 && j >= 1) {
+                    node->link(nodes[i - 1][j - 1]);
+                }
+                
+                if(i + 1 < columns && j >= 1) {
+                    node->link(nodes[i + 1][j - 1]);
+                }
+                
+                if(i == 3 && j == 3) {
+                    start = NodeRef(node, startGreen, this);
+                }
+                if(i == 6 && j == 6) {
+                    goal = NodeRef(node, goalRed, this);
+                }
             }
         }
     }
     
-    std::list<Node> nodes;
+    bool contains(sf::Vector2i point) {
+        return borderRect.getGlobalBounds().contains(sf::Vector2f(point.x, point.y) - getPosition());
+    }
     
-private:
+    Node* nodes[20][20];
+    NodeRef start;
+    NodeRef goal;
+    
+    sf::RectangleShape borderRect;
+    
     unsigned int rows;
     unsigned int columns;
+private:
     unsigned int width;
     unsigned int height;
-    sf::RectangleShape borderRect;
     
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
         states.transform *= getTransform();
         target.draw(borderRect, states);
         
-        for(Node node : nodes) {
-            target.draw(node, states);
+        for(int i = 0; i < columns; ++i) {
+            for(int j = 0; j < rows; ++j) {
+                target.draw(nodes[i][j]->rect, states);
+            }
         }
+        
+        target.draw(start.rect, states);
+        target.draw(goal.rect, states);
     }
 };
+
+sf::RectangleShape makeLine(sf::Vector2f p1, sf::Vector2f p2, float thickness) {
+    float dx = p2.x - p1.x;
+    float dy = p2.y - p1.y;
+    float rot = atan2(dy, dx) * 57.2958;
+    float ht = thickness / 2;
+    
+    sf::RectangleShape rect(sf::Vector2f(std::sqrt(std::abs(dx)*std::abs(dx) + std::abs(dy)*std::abs(dy)), ht*2));
+    rect.setSize(sf::Vector2f(std::sqrt(std::abs(dx)*std::abs(dx) + std::abs(dy)*std::abs(dy)), ht*2));
+    rect.setOrigin(0, 2);
+    rect.setPosition(p1.x, p1.y);
+    rect.setRotation(rot);
+    rect.setFillColor(dark);
+    return rect;
+}
+
 
 int main(int, char const**) {
     sf::ContextSettings settings;
@@ -208,11 +357,15 @@ int main(int, char const**) {
     if (!font.loadFromFile(resourcePath() + "inconsolata.otf")) {
         return EXIT_FAILURE;
     }
+
+    Action action = Action::None;
+    NodeRef* draggedRef = nullptr;
+    bool mousePressed = false;
     
+    // Add GUI elements ---
     unsigned int xSpace = 58;
     unsigned int ySpace = 58;
 
-    // Add GUI elements ---
     RadioGroup radioGroup(162);
     radioGroup.setPosition(xSpace, ySpace);
     RadioOption aStar(sf::String(L"A*"), font);
@@ -245,20 +398,108 @@ int main(int, char const**) {
     
     Grid grid(15, 15, 480, 480);
     grid.setPosition(xSpace, ySpace);
-    
+
     // ------------------------
     
     while(window.isOpen()) {
         sf::Event event;
         
         while(window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
+            if(event.type == sf::Event::Closed) {
                 window.close();
             }
 
             if(event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
                 window.close();
             }
+            
+            if(event.type == sf::Event::MouseButtonPressed) {
+                sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+                sf::Vector2f mousePosF = sf::Vector2f(mousePos.x, mousePos.y);
+                
+                mousePressed = true;
+                
+                if(grid.contains(mousePos)) {
+                    if(grid.start.contains(mousePos)) {
+                        action = Action::DraggingRef;
+                        draggedRef = &grid.start;
+                    } else if(grid.goal.contains(mousePos)) {
+                        action = Action::DraggingRef;
+                        draggedRef = &grid.goal;
+                    } else {
+                        for(int i = 0; i < grid.columns; ++i) {
+                            for(int j = 0; j < grid.rows; ++j) {
+                                if(grid.nodes[i][j]->contains(mousePos)) {
+                                    if(!grid.nodes[i][j]->getWall()) {
+                                        grid.nodes[i][j]->setWall(true);
+                                        action = Action::Painting;
+                                    } else {
+                                        grid.nodes[i][j]->setWall(false);
+                                        action = Action::Erasing;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if(event.type == sf::Event::MouseMoved) {
+                sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+                sf::Vector2f mousePosF = sf::Vector2f(mousePos.x, mousePos.y);
+                
+                if(action == Action::DraggingRef) {
+                    draggedRef->moveToMousePosition(mousePosF);
+                } else if(grid.contains(mousePos)) {
+                    for(int i = 0; i < grid.columns; ++i) {
+                        for(int j = 0; j < grid.rows; ++j) {
+                            if(grid.nodes[i][j]->contains(mousePos)) {
+                                if(action == Action::Painting) {
+                                    if(grid.nodes[i][j] != grid.goal.node &&
+                                       grid.nodes[i][j] != grid.start.node)
+                                    {
+                                        grid.nodes[i][j]->setWall(true);
+                                    }
+                                } else if(action == Action::Erasing) {
+                                    grid.nodes[i][j]->setWall(false);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if(event.type == sf::Event::MouseButtonReleased) {
+                sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+                sf::Vector2f mousePosF = sf::Vector2f(mousePos.x, mousePos.y);
+                
+                mousePressed = false;
+                
+                if(action == Action::DraggingRef) {
+                    if(grid.contains(mousePos)) {
+                        for(int i = 0; i < grid.columns; ++i) {
+                            for(int j = 0; j < grid.rows; ++j) {
+                                if((grid.nodes[i][j]->contains(mousePos) ||
+                                    grid.nodes[i][j]->contains(mousePos + sf::Vector2i(1, 1))) &&
+                                   grid.nodes[i][j] != grid.start.node &&
+                                   grid.nodes[i][j] != grid.goal.node)
+                                {
+                                    draggedRef->setNode(grid.nodes[i][j]);
+                                    draggedRef->node->setWall(false);
+                                } else {
+                                    draggedRef->moveToNode();
+                                }
+                            }
+                        }
+                    } else {
+                        draggedRef->moveToNode();
+                    }
+                }
+                    
+                action = Action::None;
+                
+            }
+
         }
         
         window.clear(sf::Color::White);
@@ -270,6 +511,16 @@ int main(int, char const**) {
         window.draw(endButton);
         window.draw(slider);
         window.draw(grid);
+        
+        for(int i = 0; i < grid.columns; ++i) {
+            for(int j = 0; j < grid.rows; ++j) {
+                for(Node* neighbour : grid.nodes[i][j]->neighbours) {
+                    if(!grid.nodes[i][j]->getWall() && !neighbour->getWall()) {
+                        window.draw(makeLine(grid.nodes[i][j]->center(), neighbour->center(), 2));
+                    }
+                }
+            }
+        }
         
         window.display();
     }
