@@ -152,7 +152,9 @@ public:
     : wall(false),
       parent(parent),
       cameFrom(nullptr),
-      heuristic(0)
+      heuristic(0),
+      gCost(1000),
+      fCost(1000)
     {
         rect = sf::RectangleShape(sf::Vector2f(width, height));
         rect.setFillColor(gridBg);
@@ -199,6 +201,8 @@ public:
     unsigned int i;
     unsigned int j;
     unsigned int heuristic;
+    unsigned int gCost;
+    unsigned int fCost;
     
 private:
     sf::Transformable* parent;
@@ -287,30 +291,12 @@ public:
                 nodes[i][j] = node;
                 nodes[i][j]->i = i;
                 nodes[i][j]->j = j;
-                
-                if(i >= 1) {
-                    node->link(nodes[i - 1][j]);
-                }
-                
-                if(j >= 1) {
-                    node->link(nodes[i][j - 1]);
-                }
-                
-                if(i >= 1 && j >= 1) {
-                    node->link(nodes[i - 1][j - 1]);
-                }
-                
-                if(i + 1 < columns && j >= 1) {
-                    node->link(nodes[i + 1][j - 1]);
-                }
             }
         }
         
         start = NodeRef(nodes[3][3], startGreen, this);
         goal = NodeRef(nodes[8][8], goalRed, this);
         updateHeuristics();
-        
-        greedy();
     }
     
     bool contains(sf::Vector2i point) {
@@ -331,6 +317,8 @@ public:
                     node->link(nodes[i][j - 1]);
                 }
                 
+                // Diagonals
+                
                 if(i >= 1 && j >= 1) {
                     node->link(nodes[i - 1][j - 1]);
                 }
@@ -338,6 +326,10 @@ public:
                 if(i + 1 < columns && j >= 1) {
                     node->link(nodes[i + 1][j - 1]);
                 }
+                 
+                
+                nodes[i][j]->fCost = 1000;
+                nodes[i][j]->gCost = 1000;
                 
                 nodes[i][j]->cameFrom = nullptr;
                 if(!nodes[i][j]->getWall()) {
@@ -349,7 +341,12 @@ public:
             }
         }
         
-        greedy();
+        start.node->gCost = 0;
+        aStar();
+    }
+    
+    unsigned int movCost(Node* n1, Node* n2) {
+        return abs(n1->i - n2->i) + abs(n1->j - n2->j) > 1 ? 14 : 10;
     }
     
     void greedy() {
@@ -389,12 +386,57 @@ public:
                     
                     if(neighbour->heuristic < min) {
                         min = neighbour->heuristic;
-                        if(neighbour->cameFrom == nullptr) {
-                            neighbour->cameFrom = current;
-                        }
+                        neighbour->cameFrom = current;
                     }
                     
                     openSet.insert(neighbour);
+                }
+            }
+        }
+    }
+    
+    void aStar() {
+        std::set<Node*> openSet;
+        std::set<Node*> closedSet;
+        
+        openSet.insert(start.node);
+        
+        while(!openSet.empty()) {
+            unsigned int min = 1000;
+            
+            Node* current = *(openSet.begin());
+            
+            std::set<Node*>::iterator iterator;
+            for(iterator = openSet.begin(); iterator != openSet.end(); ++iterator) {
+                if((*iterator)->fCost < min) {
+                    current = *(iterator);
+                    min = current->fCost;
+                }
+            }
+            
+            current->rect.setFillColor(visitedBlue);
+            
+            if(current == goal.node) {
+                return;
+            }
+            
+            openSet.erase(current);
+            closedSet.insert(current);
+            
+            min = 1000;
+            unsigned int newCost = 1000;
+            
+            for(Node* neighbour : current->neighbours) {
+                if(closedSet.find(neighbour) == closedSet.end()) {
+                    openSet.insert(neighbour);
+                    newCost = current->gCost + movCost(current, neighbour);
+                    
+                    if(newCost < neighbour->fCost) {
+                        neighbour->gCost = newCost;
+                        neighbour->fCost = newCost + neighbour->heuristic;
+                        neighbour->cameFrom = current;
+                    }
+                    
                 }
             }
         }
@@ -562,8 +604,8 @@ int main(int, char const**) {
                                         grid.nodes[i][j]->setWall(true);
                                     }
                                 } else if(action == Action::Erasing) {
-                                    grid.updateHeuristics();
                                     grid.nodes[i][j]->setWall(false);
+                                    grid.updateHeuristics();
                                 }
                             }
                         }
@@ -589,7 +631,6 @@ int main(int, char const**) {
                                     draggedRef->setNode(grid.nodes[i][j]);
                                     draggedRef->node->setWall(false);
                                     grid.updateHeuristics();
-                                    grid.greedy();
                                 } else {
                                     draggedRef->moveToNode();
                                 }
@@ -630,6 +671,7 @@ int main(int, char const**) {
                 }
             }
         }
+        
         
         Node* node = grid.goal.node;
         
