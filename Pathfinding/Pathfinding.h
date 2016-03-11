@@ -67,6 +67,7 @@ public:
     void iterate();
     void rewind();
     void reset();
+    void toStart();
     void toEnd();
     virtual void run(bool toEnd = false) = 0;
     

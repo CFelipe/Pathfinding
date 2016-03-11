@@ -55,20 +55,24 @@ int main(int, char const**) {
     radioGroup.addOption(greedyOption);
     ySpace += radioGroup.getHeight() + 12;
     
-    Button cleanButton(sf::String(L"Limpar"), 162, font);
+    Button cleanButton(sf::String(L"Limpar"), 162, font, 20);
     cleanButton.setPosition(xSpace, ySpace);
     ySpace += 50 + 12;
     
-    Button iterateButton(sf::String(L">"), 46, font);
+    Button iterateButton(sf::String(L">"), 33, font, 20);
     iterateButton.setPosition(xSpace, ySpace);
-    xSpace += 12 + 46;
+    xSpace += 10 + 33;
     
-    Button rewindButton(sf::String(L"<"), 46, font);
+    Button rewindButton(sf::String(L"<"), 33, font, 20);
     rewindButton.setPosition(xSpace, ySpace);
-    xSpace += 12 + 46;
+    xSpace += 10 + 33;
     
-    Button endButton(sf::String(L">>"), 46, font);
+    Button endButton(sf::String(L">>"), 33, font, 20);
     endButton.setPosition(xSpace, ySpace);
+    xSpace += 10 + 33;
+    
+    Button resetButton(sf::String(L"<<"), 33, font, 20);
+    resetButton.setPosition(xSpace, ySpace);
     ySpace += 50 + 12;
     xSpace = 58;
     
@@ -143,6 +147,10 @@ int main(int, char const**) {
                 
                 if(endButton.contains(mousePos)) {
                     grid.algorithm->toEnd();
+                }
+                
+                if(resetButton.contains(mousePos)) {
+                    grid.algorithm->toStart();
                 }
                 
                 if(aStarOption.contains(mousePos)) {
@@ -223,6 +231,7 @@ int main(int, char const**) {
         window.draw(iterateButton);
         window.draw(rewindButton);
         window.draw(endButton);
+        window.draw(resetButton);
         window.draw(slider);
         window.draw(grid);
         

@@ -116,7 +116,7 @@ private:
 
 class Button : public sf::Transformable, public sf::Drawable {
 public:
-    Button(const sf::String& text, unsigned int width, const sf::Font& font)
+    Button(const sf::String& text, unsigned int width, const sf::Font& font, unsigned int fontSize = 26)
     : width(width)
     {
         borderRect = sf::RectangleShape(sf::Vector2f(width, 50));
@@ -126,7 +126,7 @@ public:
         rect.setPosition(2, 2);
         rect.setFillColor(sf::Color::White);
         
-        label = sf::Text(text, font, 26);
+        label = sf::Text(text, font, fontSize);
         label.setColor(dark);
         
         sf::FloatRect textRect = label.getLocalBounds();
@@ -135,7 +135,7 @@ public:
         label.setOrigin((int) (textRect.left + textRect.width / 2.0f),
                         (int) (textRect.top  + textRect.height / 2.0f));
         
-        label.setPosition((int) (rectBounds.left + rectBounds.width / 2),
+        label.setPosition((int) (rectBounds.left + rectBounds.width / 2) + 2,
                           (int) (rectBounds.top + rectBounds.height / 2) + 2);
     }
     

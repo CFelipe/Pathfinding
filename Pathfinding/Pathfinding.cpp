@@ -93,6 +93,14 @@ void PFAlgorithm::reset() {
     iterations = 0;
 }
 
+void PFAlgorithm::toStart() {
+    iteration = 0;
+    
+    grid.updateHeuristics();
+    reset();
+    run();
+}
+
 void PFAlgorithm::toEnd() {
     grid.updateHeuristics();
     reset();
