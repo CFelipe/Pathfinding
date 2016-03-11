@@ -141,6 +141,10 @@ int main(int, char const**) {
                     grid.algorithm->rewind();
                 }
                 
+                if(endButton.contains(mousePos)) {
+                    grid.algorithm->toEnd();
+                }
+                
                 if(aStarOption.contains(mousePos)) {
                     radioGroup.selectOption(&aStarOption);
                     grid.algorithm = &aStar;
@@ -237,6 +241,24 @@ int main(int, char const**) {
             }
         }
          */
+        
+        if(grid.goal.node->cameFrom == nullptr) {
+            for(int i = 0; i < grid.columns; ++i) {
+                for(int j = 0; j < grid.rows; ++j) {
+                    for(Node* neighbour : grid.nodes[i][j]->neighbours) {
+                        if(!grid.nodes[i][j]->getWall() && !neighbour->getWall()) {
+                            if(grid.nodes[i][j]->cameFrom != nullptr) {
+                                sf::RectangleShape rect = makeLine(grid.nodes[i][j]->center(), grid.nodes[i][j]->cameFrom->center(), 2);
+                                sf::Color color = rect.getFillColor();
+                                color.a = 50;
+                                rect.setFillColor(color);
+                                window.draw(rect);
+                            }
+                        }
+                    }
+                }
+            }
+        }
         
         
         Node* node = grid.goal.node;

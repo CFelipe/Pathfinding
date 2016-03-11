@@ -93,6 +93,12 @@ void PFAlgorithm::reset() {
     iterations = 0;
 }
 
+void PFAlgorithm::toEnd() {
+    grid.updateHeuristics();
+    reset();
+    run(true);
+}
+
 NodeRef::NodeRef(Node* node, sf::Color color, sf::Transformable* parent)
 : node(node),
   parent(parent),
@@ -252,11 +258,10 @@ void Grid::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     target.draw(goal.rect, states);
 }
     
-void AStar::run() {
+void AStar::run(bool toEnd) {
     openSet.insert(grid.start.node);
     
-    while(!openSet.empty() && iterations < iteration) {
-        std::cout << iterations << std::endl;
+    while(!openSet.empty() && (iterations < iteration || toEnd)) {
         unsigned int min = 1000;
         
         Node* current = *(openSet.begin());
@@ -302,13 +307,16 @@ void AStar::run() {
         
         ++iterations;
     }
-    std::cout << "---" << std::endl;
-}
     
-void Greedy::run() {
+    if(toEnd) {
+        iteration = iterations;
+    }
+}
+
+void Greedy::run(bool toEnd) {
     openSet.insert(grid.start.node);
     
-    while(!openSet.empty()) {
+    while(!openSet.empty() && (iterations < iteration || toEnd)) {
         unsigned int min = 1000;
         
         Node* current = *(openSet.begin());
@@ -336,10 +344,8 @@ void Greedy::run() {
         for(Node* neighbour : current->neighbours) {
             if(closedSet.find(neighbour) == closedSet.end()) {
                 neighbour->rect.setFillColor(visitedBlue);
-                neighbour->cameFrom = current;
-                
-                if(neighbour->heuristic < min) {
-                    min = neighbour->heuristic;
+
+                if(neighbour->heuristic < min && neighbour->cameFrom == nullptr) {
                     neighbour->cameFrom = current;
                 }
                 
@@ -350,5 +356,7 @@ void Greedy::run() {
         ++iterations;
     }
     
-    std::cout << iterations << std::endl;
+    if(toEnd) {
+        iteration = iterations;
+    }
 }

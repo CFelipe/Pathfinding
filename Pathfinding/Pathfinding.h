@@ -1,11 +1,3 @@
-//
-//  Pathfinding.h
-//  Pathfinding
-//
-//  Created by Felipe on 3/10/16.
-//  Copyright (c) 2016 Felipe. All rights reserved.
-//
-
 #ifndef __Pathfinding__Pathfinding__
 #define __Pathfinding__Pathfinding__
 
@@ -75,7 +67,8 @@ public:
     void iterate();
     void rewind();
     void reset();
-    virtual void run() = 0;
+    void toEnd();
+    virtual void run(bool toEnd = false) = 0;
     
     std::set<Node*> openSet;
     std::set<Node*> closedSet;
@@ -116,14 +109,14 @@ class AStar : public PFAlgorithm {
 public:
     AStar(Grid& grid) : PFAlgorithm(grid) {}
     
-    virtual void run();
+    virtual void run(bool toEnd);
 };
 
 class Greedy : public PFAlgorithm {
 public:
     Greedy(Grid& grid) : PFAlgorithm(grid) {}
     
-    virtual void run();
+    virtual void run(bool toEnd);
 };
 
 #endif /* defined(__Pathfinding__Pathfinding__) */
