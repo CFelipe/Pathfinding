@@ -4,7 +4,7 @@
 const sf::Color dark = sf::Color(51, 51, 51, 255);
 const sf::Color borderColor = sf::Color(102, 102, 102, 255);
 const sf::Color gridBg = sf::Color(242, 242, 242, 255);
-const sf::Color wallColor = sf::Color(165, 165, 165, 255);
+const sf::Color wallColor = sf::Color(140, 140, 140, 255);
 const sf::Color startGreen = sf::Color(89, 198, 95, 255);
 const sf::Color goalRed = sf::Color(196, 91, 91, 255);
 const sf::Color visitedBlue = sf::Color(145, 194, 216, 255);
